@@ -56,15 +56,25 @@ exports.getCustomerByQuery = (req,res) => {
     // search customers collection based on query
     db.collection('customers').where( 'firstName', '==', fname ).get()
     // respond with results
-        .then(
-            customerCollection => {
-                const matches = customerCollection.docs.map( doc => {
-                    let customer = doc.data()
-                    customer.id = doc.id
-                    return customer
-                })
-                res.send(matches)
-            }
+    .then(
+        customerCollection => {
+            const matches = customerCollection.docs.map( doc => {
+                let customer = doc.data()
+                customer.id = doc.id
+                return customer
+            })
+            res.send(matches)
+        }
         )
         .catch(err => res.status(500).send(err))
+    }
+    
+    //create new customer with post
+    exports.createCustomer = (req,res) => {
+        const db = connectDb()
+
+        db.collection('customers')
+        .add(req.body)
+        .then(docRef => res.send(docRef.id))
+        .catch(err => res.status(500).send("Customer could not be created."))
 }
