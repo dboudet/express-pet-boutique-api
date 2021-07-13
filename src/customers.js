@@ -1,5 +1,5 @@
 
-const { request, response } = require('express')
+const { req, res } = require('express')
 const admin = require('firebase-admin')
 const credentials = require('../credentials.json')
 
@@ -13,7 +13,7 @@ function connectDb() {
     return admin.firestore()
 }
 
-exports.getCustomers = (request, response) => {
+exports.getCustomers = (req, res) => {
     const db = connectDb()
     db.collection('customers').get()
         .then( customerCollection => {
@@ -22,32 +22,32 @@ exports.getCustomers = (request, response) => {
                 cust.id = customerDoc.id
                 return cust
             })
-            response.send(allCustomers)
+            res.send(allCustomers)
         })
         .catch(err => {
             console.error(err)
-            response.status(500).send(err)
+            res.status(500).send(err)
         })
 }
 
-exports.getCustomerById = (request, response) => {
-    if (!request.params.customerId) {
-        response.status(400).send('No customer specified!.')
+exports.getCustomerById = (req, res) => {
+    if (!req.params.customerId) {
+        res.status(400).send('No customer specified!.')
         return
     }
     const db = connectDb()
-    db.collection('customers').customerDoc(request.params.customerId).get()
+    db.collection('customers').customerDoc(req.params.customerId).get()
         .then( customerDoc => {
             let customer = customerDoc.data()
             customer.id = customerDoc.id
                 /* *** important to set id as property of object because firestore doesn't 
                 automatically do this. so this pulls the doc id (name of object itself) and 
                 assigns it as a property of the doc. */
-            response.send(customer)
+            res.send(customer)
         })
         .catch( err => {
             console.error(err)
-            response.status(500).send(err)
+            res.status(500).send(err)
         })
 }
 
