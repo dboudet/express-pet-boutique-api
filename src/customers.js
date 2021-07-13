@@ -17,7 +17,11 @@ exports.getCustomers = (request, response) => {
     const db = connectDb()
     db.collection('customers').get()
         .then( customerCollection => {
-            const allCustomers = customerCollection.docs.map(doc => doc.data())
+            const allCustomers = customerCollection.docs.map(customerDoc => {
+                let cust = customerDoc.data()
+                cust.id = customerDoc.id
+                return cust
+            })
             response.send(allCustomers)
         })
         .catch(err => {
@@ -32,7 +36,7 @@ exports.getCustomerById = (request, response) => {
         return
     }
     const db = connectDb()
-    db.collection('customers').doc(request.params.customerId).get()
+    db.collection('customers').customerDoc(request.params.customerId).get()
         .then( customerDoc => {
             let customer = customerDoc.data()
             customer.id = customerDoc.id
@@ -58,9 +62,9 @@ exports.getCustomerByQuery = (req,res) => {
     // respond with results
     .then(
         customerCollection => {
-            const matches = customerCollection.docs.map( doc => {
-                let customer = doc.data()
-                customer.id = doc.id
+            const matches = customerCollection.docs.map( customerDoc => {
+                let customer = customerDoc.data()
+                customer.id = customerDoc.id
                 return customer
             })
             res.send(matches)
@@ -77,4 +81,49 @@ exports.getCustomerByQuery = (req,res) => {
         .add(req.body)
         .then(docRef => res.send(docRef.id))
         .catch(err => res.status(500).send("Customer could not be created."))
+}
+
+// filter out Dan using firestore
+// exports.getCustomersNotDan = (req, res) => {
+//     const db = connectDb()
+//     db.collection('customers').where('firstName', '!=', 'Dan').get()
+//         .then( customerCollection => {
+//             const customers = customerCollection.docs.map(customerDoc => {
+//                 let customer = customerDoc.data()
+//                 customer.id = customerDoc.id
+//                 return customer
+//             })
+//             res.send(customers)
+//         })
+//         .catch(err => {
+//             console.error(err)
+//             res.status(500).send(err)
+//         })
+// }
+
+//filter out Dan using JS filter
+// exports.getCustomersNotDan = (req, res) => {
+//     const db = connectDb()
+//     db.collection('customers').get()
+//         .then( customerCollection => {
+//             const customers = customerCollection.docs.map(customerDoc => {
+//                 let customer = customerDoc.data()
+//                 customer.id = customerDoc.id
+//                 return customer
+//             })
+//             const goodCustomers = customers.filter(cust => cust.firstName !== 'Dan')
+//             res.send(goodCustomers)
+//         })
+//         .catch(err => {
+//             console.error(err)
+//             res.status(500).send(err)
+//         })
+// }
+
+exports.deleteCustomer = (req,res) => {
+    const db = connectDb()
+    const { docId } = req.params
+    db.collection('customers').doc(docId).delete()
+        .then( () => res.status(203).send('document successfully deleted.'))
+        .catch(err => res.status(500).send(err))
 }
